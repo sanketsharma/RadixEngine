@@ -34,6 +34,8 @@ BaseGame::BaseGame() :
     profiler::startListen();
   }
 
+  event.debugLogLevel = EventDispatcher::DebugLogLevel::DispatchedEventsRepr;
+
   window.setConfig(config);
   inputManager.setConfig(config);
 }
@@ -71,6 +73,8 @@ void BaseGame::setup() {
   screenRenderer = std::make_unique<ScreenRenderer>(*world, *renderer.get(), gameWorld);
   renderer->addRenderer(*screenRenderer);
 
+  window.addDispatcher(eventDispatcher);
+
   inputManager.init();
 }
 
@@ -93,8 +97,6 @@ void BaseGame::switchToOtherWorld(const std::string &name) {
   }
   setWorld(std::move(it->second));
   otherWorlds.erase(it);
-
-  inputManager.reInit();
 }
 
 void BaseGame::clearOtherWorldList() {

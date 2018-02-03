@@ -19,7 +19,7 @@ void InputManager::setConfig(const Config &config) {
 }
 
 void InputManager::init() {
-  EventDispatcher& event = game.getWorld()->event;
+  EventDispatcher& event = game.getDispatcher();
 
   if (not config.getBindings()[PLAYER_MOVE_ANALOGUE].empty()) {
     analogueChannels[PLAYER_MOVE_ANALOGUE] = Channel<Vector2f>((ChannelListener*)this);
@@ -36,7 +36,7 @@ void InputManager::init() {
 }
 
 void InputManager::reInit() {
-  EventDispatcher& event = game.getWorld()->event;
+  EventDispatcher& event = game.getDispatcher();
 
   for (auto& el : analogueChannels) {
     el.second.reInit(event);
@@ -58,45 +58,52 @@ void InputManager::close() {
 }
 
 void InputManager::channelChanged(const int &id) {
-  entities::Player& player = game.getWorld()->getPlayer();
+  if (game.getWorld()) {
+    // Actions dependant on world existing
+
+    entities::Player& player = game.getWorld()->getPlayer();
+
+    switch(id) {
+    case PLAYER_MOVE_ANALOGUE: {
+      Vector2f movement = analogueChannels[PLAYER_MOVE_ANALOGUE].get();
+      player.move(movement);
+      break;
+    }
+    case PLAYER_LOOK_ANALOGUE: {
+      Vector2f heading = analogueChannels[PLAYER_LOOK_ANALOGUE].get();
+      player.changeHeading(heading);
+      break;
+    }
+    case PLAYER_JUMP: {
+      if (digitalChannels[PLAYER_JUMP].get()) {
+        player.jump();
+      }
+      break;
+    }
+    case PLAYER_PORTAL_0: {
+      //
+    }
+    case PLAYER_PORTAL_1: {
+      //
+    }
+    case PLAYER_FORWARD:
+    case PLAYER_BACK: {
+      float moveY = digitalChannels[PLAYER_BACK].get() - digitalChannels[PLAYER_FORWARD].get();
+      player.moveY(moveY);
+      break;
+    }
+    case PLAYER_LEFT:
+    case PLAYER_RIGHT: {
+      float moveX = digitalChannels[PLAYER_RIGHT].get() - digitalChannels[PLAYER_LEFT].get();
+      player.moveX(moveX);
+      break;
+    }
+    }
+  }
 
   switch(id) {
-  case PLAYER_MOVE_ANALOGUE: {
-    Vector2f movement = analogueChannels[PLAYER_MOVE_ANALOGUE].get();
-    player.move(movement);
-    break;
-  }
-  case PLAYER_LOOK_ANALOGUE: {
-    Vector2f heading = analogueChannels[PLAYER_LOOK_ANALOGUE].get();
-    player.changeHeading(heading);
-    break;
-  }
-  case PLAYER_JUMP: {
-    if (digitalChannels[PLAYER_JUMP].get()) {
-      player.jump();
-    }
-    break;
-  }
-  case PLAYER_PORTAL_0: {
-    //
-  }
-  case PLAYER_PORTAL_1: {
-    //
-  }
-  case PLAYER_FORWARD:
-  case PLAYER_BACK: {
-    float moveY = digitalChannels[PLAYER_BACK].get() - digitalChannels[PLAYER_FORWARD].get();
-    player.moveY(moveY);
-    break;
-  }
-  case PLAYER_LEFT:
-  case PLAYER_RIGHT: {
-    float moveX = digitalChannels[PLAYER_RIGHT].get() - digitalChannels[PLAYER_LEFT].get();
-    player.moveX(moveX);
-    break;
-  }
   case GAME_PAUSE: {
-
+    //
   }
   case GAME_QUIT: {
     if (digitalChannels[GAME_QUIT].get()) {
@@ -107,7 +114,7 @@ void InputManager::channelChanged(const int &id) {
   default: {
     return;
   }
-  }
+  } 
 }
 
 Vector2f InputManager::getPlayerMovementVector() const {
@@ -117,8 +124,8 @@ Vector2f InputManager::getPlayerMovementVector() const {
   return movement;
 }
 
-bool InputManager::isActionDigital(const int &act) {
-  switch(act) {
+bool InputManager::isActionDigital(const int &action) {
+  switch(action) {
   case PLAYER_JUMP:
   case PLAYER_PORTAL_0:
   case PLAYER_PORTAL_1:

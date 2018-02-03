@@ -93,6 +93,9 @@ public:
   inline Window& getWindow() {
     return window;
   }
+  inline EventDispatcher& getDispatcher() {
+    return eventDispatcher;
+  }
   inline std::list<CustomTrigger>& getCustomTriggers() {
     return customTriggers;
   }
@@ -119,6 +122,7 @@ protected:
   std::unique_ptr<Renderer> renderer;
   std::shared_ptr<radix::Screen> screen;
   EventDispatcher::CallbackHolder screenshotCallbackHolder;
+  EventDispatcher eventDispatcher;
 
   std::string defaultMap;
   std::string windowTitle;
